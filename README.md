@@ -4,9 +4,11 @@ A RESTful API for managing workshops and educational notions built with NestJS, 
 
 ## Overview
 
-This application provides a backend API for organizing workshops and managing educational concepts (notions). It features a modular NestJS architecture with MongoDB persistence.
+This application provides a backend API for organizing workshops and managing educational concepts (notions). It
+features a modular NestJS architecture with MongoDB persistence.
 
 **Key Features:**
+
 - Workshop management (CRUD operations)
 - Notion management (CRUD operations)
 - One-to-many relationship between workshops and notions
@@ -27,33 +29,39 @@ This application provides a backend API for organizing workshops and managing ed
 
 ## Prerequisites
 
-Before you begin, ensure you have installed:
+Before you begin, ensure you have installed either:
 
-- **Node.js** 22.x or higher ([Download](https://nodejs.org/))
-- **npm** 10.x or higher (included with Node.js)
-- **MongoDB** 7.x or higher ([Download](https://www.mongodb.com/try/download/community))
+- **Node.js** 22.x or higher ([Download](https://nodejs.org/)), **npm** 10.x or higher, and **MongoDB** 7.x or higher ([Download](https://www.mongodb.com/try/download/community)) for a local setup
+
+or:
+
+- **Docker** and **Docker Compose** for a containerized setup (see [Running with Docker](#running-with-docker))
 
 ## Getting Started
 
 ### Installation
 
 1. Clone this repository:
+
 ```bash
 git clone <repository-url>
 cd p6-dfsjs-backend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Configure environment variables:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your configuration:
+
 ```env
 PORT=3000
 MONGO_URI=mongodb://localhost:27017/workshopsdb
@@ -66,6 +74,7 @@ NODE_ENV=development
 **Important**: Ensure MongoDB is running locally before starting the application.
 
 **Start MongoDB**:
+
 ```bash
 # macOS (with Homebrew)
 brew services start mongodb-community
@@ -78,6 +87,7 @@ net start MongoDB
 ```
 
 **Run the application**:
+
 ```bash
 # Development mode with auto-reload
 npm run start:dev
@@ -91,16 +101,50 @@ The API will be available at `http://localhost:3000`
 ### Verify Installation
 
 Check the health endpoint:
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok",
   "timestamp": "2026-01-21T10:30:00.000Z"
 }
+```
+
+## Running with Docker
+
+This repository ships a multi-stage `Dockerfile` (build with `nest build`, then a slim production image) and a `docker-compose.yml` that also starts a MongoDB container.
+
+1. Configure environment variables:
+
+```bash
+cp .env.example .env
+```
+
+`DB_USER`, `DB_PASSWORD` and `DB_NAME` configure the MongoDB root user and database created on first start; `MONGO_URI` is not used in this mode, it is rebuilt from those three variables by `docker-compose.yml`.
+
+2. Build and start both containers:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:${PORT}` (`3000` by default, see [Environment Variables](#environment-variables)), and Mongo data persists in the `db` named volume across restarts.
+
+3. Stop the stack:
+
+```bash
+docker compose down
+```
+
+Add `-v` to also drop the `db` volume (wipes MongoDB data):
+
+```bash
+docker compose down -v
 ```
 
 ## Project Structure
@@ -151,6 +195,7 @@ p6-dfsjs-backend/
 ```
 
 **Path aliases** configured in `tsconfig.json`:
+
 - `@core/*` resolves to `src/core/*`
 - `@modules/*` resolves to `src/modules/*`
 
@@ -175,10 +220,14 @@ The OpenAPI JSON spec is served at `http://localhost:3000/api/docs-json`.
 - `DELETE /api/workshops/:id` - Delete workshop
 
 **Workshop request body (POST / PUT):**
+
 ```json
 {
   "name": "Introduction to Docker",
-  "notions": ["<notion_id_1>", "<notion_id_2>"]
+  "notions": [
+    "<notion_id_1>",
+    "<notion_id_2>"
+  ]
 }
 ```
 
@@ -191,6 +240,7 @@ The OpenAPI JSON spec is served at `http://localhost:3000/api/docs-json`.
 - `DELETE /api/notions/:id` - Delete notion
 
 **Notion request body (POST / PUT):**
+
 ```json
 {
   "name": "Containerization"
@@ -241,7 +291,9 @@ Client Request
 ```
 
 **Key patterns:**
-- **core/ + modules/**: Shared infrastructure separated from feature modules, with `@core/*` and `@modules/*` path aliases
+
+- **core/ + modules/**: Shared infrastructure separated from feature modules, with `@core/*` and `@modules/*` path
+  aliases
 - **NestJS Modules**: Feature-based encapsulation (WorkshopsModule, NotionsModule)
 - **Dependency Injection**: Services injected via NestJS DI container
 - **DTOs with class-validator**: Automatic input validation via global ValidationPipe
@@ -265,12 +317,15 @@ Client Request
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/workshopsdb` |
-| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:5173` |
-| `NODE_ENV` | Environment mode | `development` |
+| Variable       | Description                                                         | Default                                 |
+|----------------|----------------------------------------------------------------------|-----------------------------------------|
+| `PORT`         | Server port                                                         | `3000`                                  |
+| `MONGO_URI`    | MongoDB connection string (local setup only, ignored by Docker Compose) | `mongodb://localhost:27017/workshopsdb` |
+| `DB_NAME`      | MongoDB database name (Docker Compose only)                         | `workshopsdb`                           |
+| `DB_USER`      | MongoDB root username (Docker Compose only)                         | `mongouser`                             |
+| `DB_PASSWORD`  | MongoDB root password (Docker Compose only)                         | `mongopassword`                         |
+| `CORS_ORIGIN`  | Allowed CORS origin                                                 | `http://localhost:5173`                 |
+| `NODE_ENV`     | Environment mode                                                    | `development`                           |
 
 ## Troubleshooting
 
@@ -279,6 +334,7 @@ Client Request
 **Problem:** `MongoServerError: connection refused`
 
 **Solution:** Ensure MongoDB is running:
+
 ```bash
 # macOS (with Homebrew)
 brew services start mongodb-community
@@ -295,6 +351,7 @@ net start MongoDB
 **Problem:** `Error: listen EADDRINUSE: address already in use :::3000`
 
 **Solution:** Change the port in `.env` or kill the process using port 3000:
+
 ```bash
 # Find process
 lsof -i :3000

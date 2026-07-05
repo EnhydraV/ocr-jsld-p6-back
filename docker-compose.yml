@@ -1,0 +1,42 @@
+services:
+  server:
+    build:
+      context: .
+      args:
+        PORT: ${PORT:-3000}
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-3000}
+      - MONGO_URI=mongodb://${DB_USER:-mongouser}:${DB_PASSWORD:-mongopassword}@mongodb:27017/${DB_NAME:-workshopsdb}?authSource=admin
+    ports:
+      - ${PORT:-3000}:3000
+    depends_on:
+      - mongodb
+    networks:
+      - p6
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${PORT:-3000}/health" ]
+      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongodb:
+    image: mongo:8.3.4
+    networks:
+      - p6
+    volumes:
+      - db:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=${DB_NAME:-workshopsdb}
+      - MONGO_INITDB_ROOT_USERNAME=${DB_USER:-mongouser}
+      - MONGO_INITDB_ROOT_PASSWORD=${DB_PASSWORD:-mongopassword}
+
+networks:
+  p6:
+    name: p6
+    driver: bridge
+
+volumes:
+  db:
