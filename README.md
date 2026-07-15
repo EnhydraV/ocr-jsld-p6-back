@@ -151,7 +151,7 @@ docker compose down -v
 
 This repository ships a GitHub Actions workflow (`.github/workflows/ci.yml`) with three sequential jobs, triggered on every push:
 
-1. **`test`** — installs dependencies and runs the Jest suite (`./run-tests.sh`), on every branch.
+1. **`test`** — installs dependencies and runs the Jest suite via `./run-tests.sh` (detailed in the [Testing](#ci-script-run-testssh) section), on every branch.
 2. **`release`** *(runs only on `main`)* — runs [semantic-release](https://semantic-release.gitbook.io/) to determine the next version from commit history, generate a changelog, and publish a GitHub release.
 3. **`build-and-push-image`** — builds the Docker image and pushes it to `ghcr.io`. When `release` published a new version, the image is also tagged with that semantic version (e.g. `ghcr.io/<owner>/<repo>:1.4.0`), in addition to its branch tag.
 
@@ -305,6 +305,25 @@ npm run test:watch
 # Run e2e tests
 npm run test:e2e
 ```
+
+### CI Script: `run-tests.sh`
+
+This is the entry point for tests in the GitHub Actions workflow (`test` job), but it runs identically locally:
+
+```bash
+./run-tests.sh
+```
+
+What it does, in order:
+
+1. **`set -euo pipefail`** — the script stops at the first failing command and propagates its exit code, so the CI job fails cleanly (including on an unset variable or a failure in the middle of a pipe).
+2. **Cleans then recreates `test-results/`** — reports from a previous run can't pollute the current result.
+3. **`npm ci`** — a clean, reproducible dependency install strictly from `package-lock.json` (unlike `npm install`, which can modify the lockfile).
+4. **`npm run test:ci`** — runs Jest in CI mode (`--ci`, no snapshot writes) with two reporters: `default` (readable console output) and `jest-junit` (an XML report consumable by tooling).
+
+The `JEST_JUNIT_OUTPUT_DIR` environment variable is exported to `test-results/`, so the report lands at `test-results/junit.xml`. This is the file the workflow uploads as an artifact (`junit-report`), even when tests fail (`if: always()`).
+
+**Note:** `.gitattributes` forces LF line endings on `*.sh` files. Without it, a checkout from Windows (CRLF) breaks the script with the classic `env: 'bash\r': No such file or directory`.
 
 ## Architecture
 
