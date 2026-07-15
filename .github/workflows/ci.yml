@@ -1,5 +1,10 @@
 on:
   push:
+    # branches: obligatoire ici. Sans elle, ne définir QUE tags-ignore restreint
+    # le déclenchement aux seuls push de tags et exclut tous les push de branches
+    # (dont main) — cf doc GitHub Actions sur on.push.branches/tags.
+    branches:
+      - '**'
     # semantic-release pousse un tag vX.Y.Z après release : sans ça, ce push
     # retriggerait tout le workflow une seconde fois pour rien.
     tags-ignore:
