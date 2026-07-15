@@ -4,7 +4,7 @@
   "description": "Workshop Organizer Web API - NestJS backend for managing workshops and notions",
   "private": true,
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
