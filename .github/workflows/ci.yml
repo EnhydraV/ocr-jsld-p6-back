@@ -109,5 +109,5 @@ jobs:
         if: needs.release.outputs.new_release_published == 'true'
         run: |
           docker buildx imagetools create \
-            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.release.outputs.new_release_version }} \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}
+            --tag "${REGISTRY}/${IMAGE_NAME,,}:${{ needs.release.outputs.new_release_version }}" \
+            "${REGISTRY}/${IMAGE_NAME,,}@${{ steps.push.outputs.digest }}"
